@@ -88,6 +88,8 @@ P.S.: если при запуске некоторые контейнеры б�
     - Вверху вы можете увидеть запрос, аналогичный SQL-синтаксису. Поэкспериментируйте с запросом, попробуйте изменить группировку и интервал наблюдений.
 
 Для выполнения задания приведите скриншот с отображением метрик утилизации cpu из веб-интерфейса.
+#### Решение
+![1-3](./3.png)
 #
 9. Изучите список [telegraf inputs](https://github.com/influxdata/telegraf/tree/master/plugins/inputs). 
 Добавьте в конфигурацию telegraf следующий плагин - [docker](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/docker):
@@ -117,6 +119,49 @@ P.S.: если при запуске некоторые контейнеры б�
 веб-интерфейсе базы telegraf.autogen . Там должны появиться метрики, связанные с docker.
 
 Факультативно можете изучить какие метрики собирает telegraf после выполнения данного задания.
+
+#### Решение
+При скачивании sandbox. Уже были:  
+Для ```telegraf.conf```
+```go
+[[inputs.docker]]
+  endpoint = "unix:///var/run/docker.sock"
+  container_names = []
+  timeout = "5s"
+  perdevice = true
+  total = false
+```
+Для ```docker-compose.yml```
+```yml
+  telegraf:
+    # Full tag list: https://hub.docker.com/r/library/telegraf/tags/
+    build:
+      context: ./images/telegraf/
+      dockerfile: ./${TYPE}/Dockerfile
+      args:
+        TELEGRAF_TAG: ${TELEGRAF_TAG}
+    image: "telegraf"
+    privileged: true
+    user: telegraf:986
+    environment:
+      HOSTNAME: "telegraf-getting-started"
+    # Telegraf requires network access to InfluxDB
+    links:
+      - influxdb
+    volumes:
+      # Mount for telegraf configuration
+      - /home/julie/tick-stack/sandbox/telegraf/:/etc/telegraf/
+      # Mount for Docker API access
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - influxdb
+    ports:
+      - "8092:8092/udp"
+      - "8094:8094"
+      - "8125:8125/udp"
+```
+Поэтому всё уже настроено и метрики доступны
+![1-4](./4.png)
 
 ## Дополнительное задание (со звездочкой*) - необязательно к выполнению
 
